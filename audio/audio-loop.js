@@ -20,8 +20,8 @@ class AudioLoop {
     this.visualizer = visualizer;
     this.events = [];
 
-    this.playerMelody = new window.core.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
-    this.playerDrums = new window.core.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    this.playerMelody = new window.mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    this.playerDrums = new window.mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
 
     this.playerMelody.callbackObject = {
       run: (note) => {
@@ -57,9 +57,9 @@ class AudioLoop {
   }
 
   switchToMidi(device) {
-    this.playerMelody = new window.core.MIDIPlayer();
+    this.playerMelody = new window.mm.MIDIPlayer();
     this.playerMelody.outputs = [device];
-    this.playerDrums = new window.core.MIDIPlayer();
+    this.playerDrums = new window.mm.MIDIPlayer();
     this.playerDrums.outputs = [device];
     this.isUsingMidi = true;
 
@@ -144,7 +144,7 @@ class AudioLoop {
       player.currentPart.stop();
       player.currentPart.mute = true;
     }
-    window.Tone.Transport.clear(player.scheduledStop);
+    window.mm.Tone.Transport.clear(player.scheduledStop);
     player.scheduledStop = undefined;
   }
 

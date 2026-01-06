@@ -102,7 +102,7 @@ class Visualizer {
       velocity: note.velocity
     });
     
-    this.vizInput = new window.core.PianoRollSVGVisualizer(this.input, this.svgInput, this.cfgInput);
+    this.vizInput = new window.mm.PianoRollSVGVisualizer(this.input, this.svgInput, this.cfgInput);
   }
   
   showMelody(melody, muted) {
@@ -118,7 +118,7 @@ class Visualizer {
     // }
     
     this.melody = melody;
-    this.vizMelody = new window.core.PianoRollSVGVisualizer(this.melody, this.svgMelody, this.cfgMelody);
+    this.vizMelody = new window.mm.PianoRollSVGVisualizer(this.melody, this.svgMelody, this.cfgMelody);
   }
   
   showDrums(drums, muted) {
@@ -134,7 +134,7 @@ class Visualizer {
     // }
     
     this.drums = drums;
-    this.vizDrums = new window.core.PianoRollSVGVisualizer(this.drums, this.svgDrums, this.cfgDrums);
+    this.vizDrums = new window.mm.PianoRollSVGVisualizer(this.drums, this.svgDrums, this.cfgDrums);
   }
   
   clearInput() {

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const NOTE_LENGTH = window.Tone.Time('8n').toSeconds();
+const NOTE_LENGTH = window.mm.Tone.Time('8n').toSeconds();
 const NUM_INPUT_BARS = 2;
 let TWO_BAR_LENGTH;
 const VELOCITY = 40;
@@ -39,7 +39,8 @@ const piano = audioLoop.playerMelody;
 initListeners();
 
 function initListeners() {
-  document.getElementById('btnReady').onclick = () => {
+  document.getElementById('btnReady').onclick = async () => {
+    await window.mm.Tone.start();
     const selection = document.getElementById('selectMidiOut').selectedIndex;
     if (selection > 0) {
       audioLoop.switchToMidi(midiOutDevices[selection]);
@@ -177,7 +178,7 @@ async function onMidiIn(msg) {
 }
 
 function notePressed(pitch) {
-  const audioTime = window.Tone.immediate();
+  const audioTime = window.mm.Tone.immediate();
   const time = Math.max(0, audioTime - metronome.startedAt);
 
   const n = {
@@ -278,7 +279,7 @@ function playRecording() {
 }
 
 function saveRecording() {
-  window.saveAs(new File([window.core.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
+  window.saveAs(new File([window.mm.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
 }
 async function drumifyOnServer(ns) {
   const temp = parseFloat(document.getElementById('inputTemperature').value);
