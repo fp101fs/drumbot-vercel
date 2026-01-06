@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const Tone = window.mm.Tone;
+const Tone = mm.Tone;
 
 class Metronome {
   constructor(clicksPerQuarter = 1) {

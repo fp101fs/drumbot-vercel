@@ -33,19 +33,28 @@ let currentOctave = 4;
 let metronome, visualizer, recorder, audioLoop, piano;
 
 window.onload = () => {
-  NOTE_LENGTH = window.mm.Tone.Time('8n').toSeconds();
-  metronome = new Metronome(4);
-  visualizer = new Visualizer(4);
-  recorder = new InputRecorder();
-  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
+  const init = () => {
+    if (typeof mm === 'undefined' || !mm.Tone) {
+      console.log('Waiting for Magenta...');
+      setTimeout(init, 100);
+      return;
+    }
+    console.log('Magenta loaded, initializing...');
+    NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
+    metronome = new Metronome(4);
+    visualizer = new Visualizer(4);
+    recorder = new InputRecorder();
+    audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
 
-  piano = audioLoop.playerMelody;
-  initListeners();
+    piano = audioLoop.playerMelody;
+    initListeners();
+  };
+  init();
 };
 
 function initListeners() {
   document.getElementById('btnReady').onclick = async () => {
-    await window.mm.Tone.start();
+    await mm.Tone.start();
     const selection = document.getElementById('selectMidiOut').selectedIndex;
     if (selection > 0) {
       audioLoop.switchToMidi(midiOutDevices[selection]);
@@ -183,7 +192,7 @@ async function onMidiIn(msg) {
 }
 
 function notePressed(pitch) {
-  const audioTime = window.mm.Tone.immediate();
+  const audioTime = mm.Tone.immediate();
   const time = Math.max(0, audioTime - metronome.startedAt);
 
   const n = {
@@ -284,7 +293,7 @@ function playRecording() {
 }
 
 function saveRecording() {
-  window.saveAs(new File([window.mm.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
+  window.saveAs(new File([mm.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
 }
 async function drumifyOnServer(ns) {
   const temp = parseFloat(document.getElementById('inputTemperature').value);
