@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const NOTE_LENGTH = window.mm.Tone.Time('8n').toSeconds();
+let NOTE_LENGTH;
 const NUM_INPUT_BARS = 2;
 let TWO_BAR_LENGTH;
 const VELOCITY = 40;
@@ -30,13 +30,18 @@ let shouldRegenerateDrums = true;
 let midiInDevices, midiOutDevices;
 let currentOctave = 4;
 
-const metronome = new Metronome(4);
-const visualizer = new Visualizer(4);
-const recorder = new InputRecorder();
-const audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
+let metronome, visualizer, recorder, audioLoop, piano;
 
-const piano = audioLoop.playerMelody;
-initListeners();
+window.onload = () => {
+  NOTE_LENGTH = window.mm.Tone.Time('8n').toSeconds();
+  metronome = new Metronome(4);
+  visualizer = new Visualizer(4);
+  recorder = new InputRecorder();
+  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
+
+  piano = audioLoop.playerMelody;
+  initListeners();
+};
 
 function initListeners() {
   document.getElementById('btnReady').onclick = async () => {
@@ -507,7 +512,5 @@ function updateUI(state) {
     case 'toggle-click':
       btnMuteMetronome.textContent = metronome.muted ? 'unmute click' : 'mute click';
       break;
-
-
   }
 }
