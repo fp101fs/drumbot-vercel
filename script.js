@@ -33,23 +33,14 @@ let currentOctave = 4;
 let metronome, visualizer, recorder, audioLoop, piano;
 
 window.onload = () => {
-  const init = () => {
-    if (typeof mm === 'undefined' || !mm.Tone) {
-      console.log('Waiting for Magenta...');
-      setTimeout(init, 100);
-      return;
-    }
-    console.log('Magenta loaded, initializing...');
-    NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
-    metronome = new Metronome(4);
-    visualizer = new Visualizer(4);
-    recorder = new InputRecorder();
-    audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
+  NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
+  metronome = new Metronome(4);
+  visualizer = new Visualizer(4);
+  recorder = new InputRecorder();
+  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
 
-    piano = audioLoop.playerMelody;
-    initListeners();
-  };
-  init();
+  piano = audioLoop.playerMelody;
+  initListeners();
 };
 
 function initListeners() {
