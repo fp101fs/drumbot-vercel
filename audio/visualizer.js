@@ -1,151 +1,134 @@
-/**
- * @license
- * Copyright 2019 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-const BASE_CONFIG = {
-  minPitch: 20,
-  maxPitch: 100,
-  noteHeight: 1.5,
-  pixelsPerTimeStep: 44
-};
+document.addEventListener('DOMContentLoaded', () => {
+  /**
+   * @license
+   * Copyright 2019 Google Inc. All Rights Reserved.
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *    http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  const Y_OFFSET = 25;
 
-class Visualizer {
-  constructor(clicksPerQuarter = 1) {
-    this.TICKS_PER_BAR = 4 * clicksPerQuarter;
-    this.TICKS_PER_TWO_BAR = 2 * this.TICKS_PER_BAR;
-    
-    this.svgInput = document.getElementById('svgInput');
-    this.svgMelody = document.getElementById('svgMelody');
-    this.svgDrums = document.getElementById('svgDrums');
-    this.bar = document.getElementById('timeline');
-    
-    this.barLocations = Array(this.TICKS_PER_TWO_BAR).fill().map((v,i)=>i);
-    this.vizMelody = this.vizDrums = null;
-    
-    this.input = {notes:[]};
-    this.melody = {notes:[]};
-    this.drums = {notes:[]};
-    
-    this.cfgInput = this.makeConfig('255, 255, 255');
-    this.cfgMelody = this.makeConfig('255, 215, 0');
-    this.cfgDrums = this.makeConfig('123, 225, 225');
-    
-    this.barOffset = 0;
-    this.barHasBeenRestarted = false;
-  }
-  
-  reset() {
-    this.svgInput.innerHTML = '';
-    this.svgMelody.innerHTML = '';
-    this.svgDrums.innerHTML = '';
-    
-    this.input.notes = [];
-    this.melody.notes = [];
-    this.drums.notes = [];
-    this.barHasBeenRestarted = false;
-    this.barOffset = 0;
-    
-  }
-  
-  setTotalTime(t) {
-    this.input.totalTime = this.melody.totalTime = this.drums.totalTime = t;
-    // There's 260 pixels available for every timestep
-    const p = Math.floor(260/t);
-    this.cfgInput.pixelsPerTimeStep = this.cfgMelody.pixelsPerTimeStep = this.cfgDrums.pixelsPerTimeStep = p;
-  }
-  
-  restartBar() {
-    if (this.barOffset >= this.TICKS_PER_BAR) {
-      // We are restarting the timeline in the second bar. This means that we want 
-      // the timeline to be the index of this click in a single bar.
-      for (let i = 0; i < this.barLocations.length; i++) {
-        const newIndex = i >= this.TICKS_PER_BAR ? i - this.TICKS_PER_BAR : i + this.TICKS_PER_BAR;
-        this.barLocations[i] = newIndex;
+  class Visualizer {
+    constructor(numQuarters) {
+      this.numQuarters = numQuarters;
+
+      this.svgInput = document.getElementById('svgInput');
+      this.svgMelody = document.getElementById('svgMelody');
+      this.svgDrums = document.getElementById('svgDrums');
+      this.timeline = document.getElementById('timeline');
+      this.lastTotalTime = 0;
+      this.totalTime = 0;
+
+      this.cfgInput = {
+        noteHeight: 5,
+        pixelsPerTimeStep: 0,
+        minPitch: 21,
+        maxPitch: 108
+      };
+      this.cfgMelody = {
+        noteHeight: 5,
+        pixelsPerTimeStep: 0,
+        minPitch: 21,
+        maxPitch: 108,
+        noteRGB: '232, 172, 14'
+      };
+      this.cfgDrums = {
+        noteHeight: 5,
+        pixelsPerTimeStep: 0,
+        noteRGB: '14, 131, 232',
+        minPitch: 35,
+        maxPitch: 51
       }
-    } else {
-      this.barLocations = Array(this.TICKS_PER_TWO_BAR).fill().map((v,i)=>i);
+      this.reset();
     }
-    this.barHasBeenRestarted = true;
-    this.advanceBar(this.barOffset);
-  }
-  
-  advanceBar(click) {
-    let index = click;
-    
-    if (!this.barHasBeenRestarted) {
-      this.barOffset = click;
-    } else {
-      // Wrap the time correctly, since the beginning of the
-      // 2 bar chunk might actually now be the second bar.
-      index = this.barLocations[click];
+
+    setTotalTime(totalTime) {
+      this.lastTotalTime = this.totalTime;
+      this.totalTime = totalTime;
+      const w = this.totalTime * this.cfgInput.pixelsPerTimeStep;
+      this.svgInput.setAttribute('width', w);
+      this.svgMelody.setAttribute('width', w);
+      this.svgDrums.setAttribute('width', w);
+
+      // Add the quarters.
+      this.timeline.innerHTML = '';
+      for (let i = 0; i < this.numQuarters * 2; i++) {
+        const x = i / (this.numQuarters * 2) * 100;
+        this.timeline.innerHTML += `<div class="quarter" style="left:${x}%"></div>`;
+      }
     }
-    this.bar.style.left = `${index/this.TICKS_PER_TWO_BAR * 100}%`;
-  }
-  
-  showInput(note, timeOffset) {
-    this.input.notes.push({
-      pitch: note.pitch, 
-      startTime: note.startTime - timeOffset, 
-      endTime: note.endTime - timeOffset, 
-      velocity: note.velocity
-    });
-    
-    this.vizInput = new core.PianoRollSVGVisualizer(this.input, this.svgInput, this.cfgInput);
-  }
-  
-  showMelody(melody, muted) {
-    if (muted) {
+
+    reset() {
+      this.setTotalTime(0);
+      this.svgInput.innerHTML = '';
       this.svgMelody.innerHTML = '';
-      return;
-    }
-    
-    // Has anything even changed?
-    // if (this.melody.notes.length !== 0 && this.melody === melody) {
-    //   console.log("nothing changed in the melody");
-    //   return;
-    // }
-    
-    this.melody = melody;
-    this.vizMelody = new core.PianoRollSVGVisualizer(this.melody, this.svgMelody, this.cfgMelody);
-  }
-  
-  showDrums(drums, muted) {
-    if (muted) {
       this.svgDrums.innerHTML = '';
-      return;
+
+      this.input = {notes:[], totalTime: 0};
+      this.melody = {notes:[], totalTime: 0};
+      this.drums = {notes:[], totalTime: 0};
+
+      this.vizInput = new core.PianoRollSVGVisualizer(this.input, this.svgInput, this.cfgInput);
+      this.vizMelody = new core.PianoRollSVGVisualizer(this.melody, this.svgMelody, this.cfgMelody);
+      this.vizDrums = new core.DrumRollSVGVisualizer(this.drums, this.svgDrums, this.cfgDrums);
     }
-    
-    // Has anything even changed?
-    // if (this.drums === drums) {
-    //   console.log("nothing changed in the melody");
-    //   return;
-    // }
-    
-    this.drums = drums;
-    this.vizDrums = new core.PianoRollSVGVisualizer(this.drums, this.svgDrums, this.cfgDrums);
+
+    showInput(note, offset) {
+      const cloned = core.sequences.clone(note);
+      cloned.startTime += offset;
+      cloned.endTime += offset;
+
+      this.vizInput.redraw(cloned, false);
+    }
+
+ca
+    showMelody(sequence, muted) {
+      this.melody = sequence;
+      this.vizMelody.noteSequence = sequence;
+      this.svgMelody.style.opacity = muted ? 0.4 : 1;
+    }
+
+    showDrums(sequence, muted) {
+      this.drums = sequence;
+      this.vizDrums.noteSequence = sequence;
+      this.svgDrums.style.opacity = muted ? 0.4 : 1;
+    }
+
+    restartBar() {
+      this.svgInput.setAttribute('x', this.lastTotalTime * this.cfgInput.pixelsPerTimeStep);
+      this.svgMelody.setAttribute('x', this.lastTotalTime * this.cfgInput.pixelsPerTimeStep);
+      this.svgDrums.setAttribute('x', this.lastTotalTime * this.cfgInput.pixelsPerTimeStep);
+    }
+
+    clearInput() {
+      this.svgInput.innerHTML = '';
+    }
+
+    advanceBar() {
+      if (this.totalTime === 0) return;
+      this.cfgInput.pixelsPerTimeStep = this.svgInput.getBoundingClientRect().width / this.totalTime;
+      this.cfgMelody.pixelsPerTimeStep = this.svgMelody.getBoundingClientRect().width / this.totalTime;
+      this.cfgDrums.pixelsPerTimeStep = this.svgDrums.getBoundingClientRect().width / this.totalTime;
+
+      // Make the notes of the right size.
+      this.vizMelody.redraw();
+      this.vizDrums.redraw();
+
+      const t = this.svgInput.getAttribute('x') || 0;
+      const x = parseFloat(t) - this.cfgInput.pixelsPerTimeStep / this.numQuarters;
+      this.svgInput.setAttribute('x', x);
+      this.svgMelody.setAttribute('x', x);
+      this.svgDrums.setAttribute('x', x);
+    }
   }
-  
-  clearInput() {
-    this.svgInput.innerHTML = '';
-    this.input.notes = [];
-  }
-  
-  makeConfig(color) {
-    // I don't trust objects anymore, man.
-    const cfg = JSON.parse(JSON.stringify(BASE_CONFIG));
-    cfg.noteRGB = color;
-    return cfg;
-  }
-}
+  window.Visualizer = Visualizer;
+});

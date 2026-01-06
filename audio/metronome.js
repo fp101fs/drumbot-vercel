@@ -1,105 +1,73 @@
-/**
- * @license
- * Copyright 2019 Google Inc. All Rights Reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-const Tone = Tone;
+document.addEventListener('DOMContentLoaded', () => {
+  /**
+   * @license
+   * Copyright 2019 Google Inc. All Rights Reserved.
+   *
+   * Licensed under the Apache License, Version 2.0 (the "License");
+   * you may not use this file except in compliance with the License.
+   * You may obtain a copy of the License at
+   *
+   *    http://www.apache.org/licenses/LICENSE-2.0
+   *
+   * Unless required by applicable law or agreed to in writing, software
+   * distributed under the License is distributed on an "AS IS" BASIS,
+   * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   * See the License for the specific language governing permissions and
+   * limitations under the License.
+   */
+  const Tone = window.Tone;
 
-class Metronome {
-  constructor(clicksPerQuarter = 1) {
-    this.reset();
-    this.clicksPerQuarter = clicksPerQuarter;
-  }
-  
-  reset() {
-    this.isMuted = false;
-    this.isTicking = false;
-    this.loclick = new Tone
-                        .MembraneSynth({
-                          pitchDecay: 0.008,
-                          envelope: {attack: 0.001, decay: 0.3, sustain: 0}
-                        })
-                        .toMaster();
-    this.hiclick = new Tone
-                        .MembraneSynth({
-                          pitchDecay: 0.008,
-                          envelope: {attack: 0.001, decay: 0.3, sustain: 0}
-                        })
-                        .toMaster();
-    this.step = -1;
-    this.startedAt = null;
-  }
-  
-  /* TickCallback should be an object like 
-    {
-      clickMark: (time, quarter) => {}, 
-      quarterMark: (time, quarter) => {}, 
-      barMark: (time) => {},  
+  class Metronome {
+    constructor(numQuarters) {
+      this.numQuarters = numQuarters;
+      this.isTicking = false;
+      this.muted = false;
+      this.reset();
     }
-  */
-  start(bpm, callback) {
-    this.reset();
-    this.bpm = bpm;
-    
-    const clicksInBar = 4 * this.clicksPerQuarter;
-    const clicksInTwoBars = 2 * clicksInBar;
 
-    this.isTicking = true;
-    let click, clickInChunk, quarter, note;
-    
-    Tone.Transport.bpm.value = bpm;
-    Tone.Transport.scheduleRepeat((time) => {
-      if (!this.startedAt) this.startedAt = time;
-      
-      const offsetTime = time - this.startedAt;
-      this.step++;
-      
-      // What is this step in the bar?
-      click = this.step % clicksInBar;
-      clickInChunk = this.step % clicksInTwoBars;
-      quarter = click % this.clicksPerQuarter;
-      
-      // Every click...
-      callback.clickMark(offsetTime, clickInChunk);
-      
-      // Every quarter...
-      if (quarter === 0) {
-        callback.quarterMark(offsetTime, Math.floor(click / this.clicksPerQuarter));
-      
-        if (!this.muted) {
-          if (click === 0) {
-            this.hiclick.triggerAttack('g5', time, 0.1);
-          } else {
-            this.loclick.triggerAttack('c5', time, 0.1);
-          }
-        }
+    reset() {
+      if (this.part) {
+        this.part.stop();
+        this.part.dispose();
       }
-  
-      // Every bar...
-      if (click === 0) callback.barMark(offsetTime);
-    }, `${clicksInBar}n`);
-    
-    Tone.Transport.start();
+      this.synth = new Tone.MembraneSynth().toMaster();
+      this.synth.volume.value = -10;
+      this.startedAt = undefined;
+    }
+
+    start(bpm, callbacks) {
+      this.reset();
+      Tone.Transport.bpm.value = bpm;
+      const part = new Tone.Part((time, value) => {
+        this.synth.triggerAttackRelease(value.note, '16n', time);
+        if (this.muted) return;
+        if (value.tick % this.numQuarters === 0) {
+          callbacks.barMark(time);
+        }
+        if (value.tick % 1 === 0) {
+          callbacks.quarterMark(time, value.tick % this.numQuarters);
+        }
+        callbacks.clickMark(time, value.tick);
+
+      }, [{tick:0, note: 'c2'}, {tick:1, note: 'c1'}, {tick:2, note: 'c1'}, {tick:3, note: 'c1'}]);
+      part.loop = true;
+      part.loopEnd = '1m';
+
+      this.part = part;
+      this.isTicking = true;
+      this.startedAt = Tone.immediate();
+      this.part.start(this.startedAt);
+    }
+
+    stop() {
+      this.isTicking = false;
+      this.part.stop(Tone.immediate());
+    }
+
+    timeish() {
+      return Tone.immediate() - this.startedAt;
+    }
   }
-  
-  stop() {
-    this.isTicking = false;
-    Tone.Transport.cancel();
-    Tone.Transport.stop();
-  }
-  
-  timeish() {
-    return Tone.icoreediate() - this.startedAt;
-  }
-}
+
+  window.Metronome = Metronome;
+});
