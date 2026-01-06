@@ -14,81 +14,84 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+(function() {
+  class InputRecorder {
+    constructor() {
+      this.isRecordingInput = false;
+      this.isPlaying = false;
+      this.player = new core.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+      this.player.callbackObject = {
+        run: (note) => {
+          this.viz.redraw(note, true);
+        },
+        stop: () => {}
+      };
+      this.reset();
+    }
 
-class InputRecorder {
-  constructor() {
-    this.isRecordingInput = false;
-    this.isPlaying = false;
-    this.player = new core.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
-    this.player.callbackObject = {
-      run: (note) => {
-        this.viz.redraw(note, true);
-      },
-      stop: () => {}
-    };
-    this.reset();
-  }
+    reset() {
+      this.stop();
+      this.input = {notes:[], tempos: [{time: 0, qpm: 120}], totalTime: 0};
+      this.full = {notes:[], tempos: [{time: 0, qpm: 120}], totalTime: 0};
+      this.isRecordingInput = false;
+      this.offset = 0;
+      this.updateVisualizer();
+    }
 
-  reset() {
-    this.stop();
-    this.input = {notes:[], tempos: [{time: 0, qpm: 120}], totalTime: 0};
-    this.full = {notes:[], tempos: [{time: 0, qpm: 120}], totalTime: 0};
-    this.isRecordingInput = false;
-    this.offset = 0;
-    this.updateVisualizer();
-  }
+    setBpm(bpm) {
+      this.input.tempos[0].qpm = bpm;
+      this.full.tempos[0].qpm = bpm;
+    }
 
-  setBpm(bpm) {
-    this.input.tempos[0].qpm = bpm;
-    this.full.tempos[0].qpm = bpm;
-  }
+    updateVisualizer() {
+      this.viz = new core.PianoRollSVGVisualizer(this.full, document.getElementById('svgInput'), {
+        noteHeight: 5,
+        pixelsPerTimeStep: 30,
+        minPitch: 21,
+        maxPitch: 108
+      });
+    }
 
-  updateVisualizer() {
-    this.viz = new core.PianoRollSVGVisualizer(this.full, document.getElementById('svgInput'), {
-      noteHeight: 5,
-      pixelsPerTimeStep: 30,
-      minPitch: 21,
-      maxPitch: 108
-    });
-  }
+    startRecordingInput(offset) {
+      this.isRecordingInput = true;
+      this.offset = offset;
+      this.input.notes = [];
+    }
 
-  startRecordingInput(offset) {
-    this.isRecordingInput = true;
-    this.offset = offset;
-    this.input.notes = [];
-  }
+    stopRecordingInput() {
+      this.isRecordingInput = false;
+    }
 
-  stopRecordingInput() {
-    this.isRecordingInput = false;
-  }
+    saveInputNote(note) {
+      const cloned = core.sequences.clone(note);
+      cloned.startTime -= this.offset;
+      cloned.endTime -= this.offset;
+      this.input.notes.push(cloned);
+    }
 
-  saveInputNote(note) {
-    const cloned = core.sequences.clone(note);
-    cloned.startTime -= this.offset;
-    cloned.endTime -= this.offset;
-    this.input.notes.push(cloned);
-  }
+    saveMelodyNote(note) {
+      this.full.notes.push(note);
+    }
 
-  saveMelodyNote(note) {
-    this.full.notes.push(note);
-  }
+    getInput(totalTime) {
+      this.input.totalTime = totalTime;
+      return this.input;
+    }
 
-  getInput(totalTime) {
-    this.input.totalTime = totalTime;
-    return this.input;
-  }
+    start(callback) {
+      this.isPlaying = true;
+      this.player.start(this.full).then(callback);
+    }
 
-  start(callback) {
-    this.isPlaying = true;
-    this.player.start(this.full).then(callback);
-  }
+    stop() {
+      this.isPlaying = false;
+      this.player.stop();
+    }
 
-  stop() {
-    this.isPlaying = false;
-    this.player.stop();
+    addLoops(audioLoop, inputOffset) {
+      audioLoop.addLoops(this.full, inputOffset, -1);
+    }
   }
-
-  addLoops(audioLoop, inputOffset) {
-    audioLoop.addLoops(this.full, inputOffset, -1);
-  }
-}
+  
+  window.InputRecorder = InputRecorder;
+})();
