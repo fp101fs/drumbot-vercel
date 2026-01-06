@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-let NOTE_LENGTH;
+const NOTE_LENGTH = Tone.Time('8n').toSeconds();
 const NUM_INPUT_BARS = 2;
 let TWO_BAR_LENGTH;
 const VELOCITY = 40;
@@ -30,30 +30,18 @@ let shouldRegenerateDrums = true;
 let midiInDevices, midiOutDevices;
 let currentOctave = 4;
 
-let metronome, visualizer, recorder, audioLoop, piano;
+const metronome = new Metronome(4);
+const visualizer = new Visualizer(4);
+const recorder = new InputRecorder();
+const audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
 
-window.onload = () => {
-  // Initialize everything that doesn't depend on Magenta.js first.
-  metronome = new Metronome(4);
-  visualizer = new Visualizer(4);
-  recorder = new InputRecorder();
-  
-  // Now create the audio loop, which will start loading samples.
-  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT);
-
-  // Wait for the samples to load, which indicates Magenta's core is ready.
-  audioLoop.samplesLoaded.then(() => {
-    NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
-    piano = audioLoop.playerMelody;
-    initListeners();
-    updateUI('record-ready');
-  });
-};
+const piano = audioLoop.playerMelody;
+initListeners();
 
 function initListeners() {
   document.getElementById('btnReady').onclick = async () => {
     // Tone.js must be started after a user gesture.
-    await mm.Tone.start();
+    await Tone.start();
     const selection = document.getElementById('selectMidiOut').selectedIndex;
     if (selection > 0) {
       audioLoop.switchToMidi(midiOutDevices[selection]);
@@ -191,7 +179,7 @@ async function onMidiIn(msg) {
 }
 
 function notePressed(pitch) {
-  const audioTime = mm.Tone.immediate();
+  const audioTime = Tone.immediate();
   const time = Math.max(0, audioTime - metronome.startedAt);
 
   const n = {
@@ -292,7 +280,7 @@ function playRecording() {
 }
 
 function saveRecording() {
-  window.saveAs(new File([mm.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
+  window.saveAs(new File([core.sequenceProtoToMidi(recorder.full)], 'recording.mid'));
 }
 async function drumifyOnServer(ns) {
   const temp = parseFloat(document.getElementById('inputTemperature').value);

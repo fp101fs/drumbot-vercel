@@ -17,7 +17,7 @@
 class InputRecorder {
   constructor() {
     this.bpm = 120;
-    this.player = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    this.player = new core.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
     this.viz = null;
     this.player.callbackObject = {
       run: (note) => {
@@ -97,7 +97,7 @@ class InputRecorder {
     document.getElementById('svgMelody').innerHTML = '';
     document.getElementById('svgDrums').innerHTML = '';
     
-    this.viz = new mm.PianoRollSVGVisualizer(this.full, document.getElementById('svgInput'), {
+    this.viz = new core.PianoRollSVGVisualizer(this.full, document.getElementById('svgInput'), {
       noteRGB: '255, 255, 255',
       activeNoteRGB: '240, 90, 99',
       minPitch: 20,

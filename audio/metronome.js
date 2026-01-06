@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const Tone = mm.Tone;
+const Tone = Tone;
 
 class Metronome {
   constructor(clicksPerQuarter = 1) {
@@ -100,6 +100,6 @@ class Metronome {
   }
   
   timeish() {
-    return Tone.immediate() - this.startedAt;
+    return Tone.icoreediate() - this.startedAt;
   }
 }
