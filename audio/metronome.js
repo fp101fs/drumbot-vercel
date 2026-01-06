@@ -30,7 +30,7 @@
         this.part.stop();
         this.part.dispose();
       }
-      this.synth = new Tone.MembraneSynth().toMaster();
+      this.synth = new Tone.MembraneSynth().toDestination();
       this.synth.volume.value = -10;
       this.startedAt = undefined;
     }

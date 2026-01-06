@@ -167,66 +167,16 @@ limitations under the License.
       </div>
     </section>
 
-    <br><br>
-    <section>
-      <details>
-        <summary><b>How to use</b></summary>
-        <ul>
-          <li>Press the <span class="accent red">record</span> button. This will start a metronome, but you don't have to start
-          recording your melody as soon as it starts!</li>
-          <li>When you're ready, start playing something -- the more "on beat" you are, the
-          better your results will be</li>
-          <li>After you've played up two 2-bars (including whatever leading silence you had), that
-          melody will start looping (and will be shown in the visualizer in <span class="accent gold">yellow</span></li>
-          <li>This loop will be used to generate a drum pattern that matches the melody (this will be shown in
-          the visualizer in <span class="accent blue">blue</span></li>
-          <li>The drums will be re-generated on every 2-bar chunk. You can control their randomness (or entropy) with the
-            <b class="accent red">temperature</b> input. You can keep the current drum loop and not re-generate it
-          on the next 2-bar chunk by pressing <b class="accent blue">v</b></li>
-          <li>You can mute or unmute any of the loops (including the metronome) using the <b class="accent red">sliders</b>
-          on the left of the keyboard</li>
-        </ul>
-        <br>
-      </details>
-
-      <details>
-        <summary><b>Keyboard shortcuts</b></summary>
-        <ul>
-          <li><b class="accent gold">m</b> mutes/unmutes the melody loop</li>
-          <li><b class="accent blue">n</b> mutes/unmutes the drums loop</li>
-          <li><b class="accent blue">v</b> toggles between re-generating the drums on every new 2-bar chunk, or keeping the current drum loop</li>
-          <li><b class="accent red">b</b> key restarts your current recording from scratch</li>
-          <li><b class="accent red">z</b> or <b class="accent red">x</b> change the piano octave</li>
-        </ul>
-        <br>
-      </details>
-
-      <details>
-        <summary><b>How does it work?</b></summary>
-        <ul>
-          <li>This app uses an open-source Magenta model called  <b class="accent blue">Drumify</b>. It is able to convert
-           a constant-velocity 'tap' pattern into a drum pattern
-          </li>
-          <li>DrumBot records 2 bars of your melody, removes the pitches from it (so that it's a sequence of taps),
-          and then sends it to the model</li>
-          <li>All of the machine learning code happens in the background, on a Node server, so that your realtime
-          audio is never interrupted</li>
-          <li>You can read more about how the model was trained on the <a href="https://magenta.tensorflow.org/groovae">Magenta blog</a>,
-            or see the code for this app on <a href="https://github.com/magenta/drumbot">GitHub</a></li>
-        </ul>
-      </details>
-
-      <details hidden>
-        <summary><b>Known issues</b></summary>
-        <ul>
-          <li>When you unmute the melody/drums, they won't actually audibly start up until the next 2-bar chunk</li>
-        </ul>
-      </details>
-    </section>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/13.8.21/Tone.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/es6/core.js"></script>
+    <!-- Use the full Magenta Music bundle which includes Tone.js and visualizers -->
+    <script src="https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+
+    <!-- Define global aliases BEFORE loading other scripts -->
+    <script>
+      window.core = window.mm;
+      window.Tone = window.mm.Tone;
+    </script>
+
     <script src="/audio/visualizer.js" defer></script>
     <script src="/audio/input-recorder.js" defer></script>
     <script src="/audio/audio-loop.js" defer></script>
