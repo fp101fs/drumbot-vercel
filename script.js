@@ -33,18 +33,26 @@ let currentOctave = 4;
 let metronome, visualizer, recorder, audioLoop, piano;
 
 window.onload = () => {
-  NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
+  // Initialize everything that doesn't depend on Magenta.js first.
   metronome = new Metronome(4);
   visualizer = new Visualizer(4);
   recorder = new InputRecorder();
-  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT, () => updateUI('record-ready'));
+  
+  // Now create the audio loop, which will start loading samples.
+  audioLoop = new AudioLoop(metronome, visualizer, VELOCITY, INSTRUMENT);
 
-  piano = audioLoop.playerMelody;
-  initListeners();
+  // Wait for the samples to load, which indicates Magenta's core is ready.
+  audioLoop.samplesLoaded.then(() => {
+    NOTE_LENGTH = mm.Tone.Time('8n').toSeconds();
+    piano = audioLoop.playerMelody;
+    initListeners();
+    updateUI('record-ready');
+  });
 };
 
 function initListeners() {
   document.getElementById('btnReady').onclick = async () => {
+    // Tone.js must be started after a user gesture.
     await mm.Tone.start();
     const selection = document.getElementById('selectMidiOut').selectedIndex;
     if (selection > 0) {

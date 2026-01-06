@@ -15,13 +15,21 @@
  * limitations under the License.
  */
 class AudioLoop {
-  constructor(metronome, visualizer, defaultVelocity, defaultInstrument, callback) {
+  constructor(metronome, visualizer, defaultVelocity, defaultInstrument) {
     this.metronome = metronome;
     this.visualizer = visualizer;
     this.events = [];
 
     this.playerMelody = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
     this.playerDrums = new mm.SoundFontPlayer('https://storage.googleapis.com/magentadata/js/soundfonts/sgm_plus');
+    this.samplesLoaded = new Promise((resolve) => {
+        const ns = {notes:[]};
+        for (let i = 21; i < 108; i++) {
+          ns.notes.push({pitch: i, velocity: defaultVelocity, program: defaultInstrument});
+        }
+        this.playerMelody.loadSamples(ns).then(resolve);
+    });
+
 
     this.playerMelody.callbackObject = {
       run: (note) => {
@@ -36,11 +44,6 @@ class AudioLoop {
       stop: () => {}
     }
 
-    const ns = {notes:[]};
-    for (let i = 21; i < 108; i++) {
-      ns.notes.push({pitch: i, velocity: defaultVelocity, program: defaultInstrument});
-    }
-    this.playerMelody.loadSamples(ns).then(callback);
     this.reset();
     this.isUsingMidi = false;
   }
