@@ -288,7 +288,7 @@ async function drumifyOnServer(ns) {
   const start = performance.now();
   ns.temperature = temp;
 
-  fetch('/drumify', {
+  fetch('/api/drumify', {
     method: 'POST',
     headers: {
       'Accept': 'application/json',

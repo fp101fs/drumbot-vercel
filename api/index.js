@@ -30,18 +30,12 @@ global.fetch = require('node-fetch');
 // env variables set.
 const PORT = process.env && process.env.PORT ? process.env.PORT : 9876;
 const mvae = new mm.MusicVAE('https://storage.googleapis.com/magentadata/js/checkpoints/groovae/tap2drum_2bar');
-warmUpModel();
 
 // http://expressjs.com/en/starter/static-files.html
 const app = express();
-app.use(express.static('client'));
 app.use(bodyParser.json());
 
-app.get('/', function(request, response) {
-  response.sendFile(__dirname + '/client/index.html');
-});
-
-app.post('/drumify', async function(request, response) {
+app.post('/api/drumify', async function(request, response) {
   if (!mvae.isInitialized()) {
     await mvae.initialize();
   }
@@ -67,18 +61,7 @@ app.post('/drumify', async function(request, response) {
   response.send(drums);
 });
 
-async function warmUpModel() {
-  await mvae.initialize();
-
-  // Warm up the model.
-  const ns = {notes: [{pitch:60, velocity: 100, startTime: 0, endTime: 1}]}
-  const quantizedNS = mmcore.sequences.quantizeNoteSequence(ns, 4);
-  await drumify(quantizedNS, 80);
-
-  app.listen(PORT, function() {
-    console.log('Your app is listening on port ' + PORT);
-  });
-}
+module.exports = app;
 
 async function drumify(ns, tempo, temperature) {
   const z = await mvae.encode([ns]);

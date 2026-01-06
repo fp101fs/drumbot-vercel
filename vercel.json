@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/drumify", "destination": "/api/index.js" }
+  ]
+}
