@@ -73,9 +73,9 @@
       this.svgMelody.innerHTML = '';
       this.svgDrums.innerHTML = '';
 
-      this.input = {notes:[], totalTime: 0};
-      this.melody = {notes:[], totalTime: 0};
-      this.drums = {notes:[], totalTime: 0};
+      this.input = {notes:[], totalTime: 4};
+      this.melody = {notes:[], totalTime: 4};
+      this.drums = {notes:[], totalTime: 4};
 
       this.vizInput = new core.PianoRollSVGVisualizer(this.input, this.svgInput, this.cfgInput);
       this.vizMelody = new core.PianoRollSVGVisualizer(this.melody, this.svgMelody, this.cfgMelody);
